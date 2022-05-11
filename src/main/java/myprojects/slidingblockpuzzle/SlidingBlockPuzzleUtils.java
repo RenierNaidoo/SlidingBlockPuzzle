@@ -21,15 +21,20 @@ public class SlidingBlockPuzzleUtils {
                 slidingBlockPuzzle[i][j] = (rows * cols) + 1;
             }
         }
+        int performanceCounter = 0; //Counts how many random numbers are checked during array creation.
         boolean isNewInt = false;
-        int toAdd;
+        int toAdd = 0;
         int toCheck;
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 while (!isNewInt) {
-                    toAdd = (int) (((Math.random()) * 16) + 1);
+                    toAdd = (int) (((Math.random()) * (rows*cols)) + 1);
+                    performanceCounter++;
+                    System.out.println("To Add: " + toAdd);
                     isNewInt = NewNumber(toAdd, slidingBlockPuzzle);
                 }
+                slidingBlockPuzzle[i][j] = toAdd;
+                isNewInt = false;
             }
         }
         for (int i = 0; i < rows; i++) {
@@ -39,6 +44,7 @@ public class SlidingBlockPuzzleUtils {
                 }
             }
         }
+        System.out.println("Total Numbers Tested: " + performanceCounter);
         return slidingBlockPuzzle;
     }
 
@@ -73,11 +79,21 @@ public class SlidingBlockPuzzleUtils {
     This function prints the contents of a 2D array to the output screen.
      */
     public static void PrintArray(int[][] slidingBlockPuzzle) {
-        
+        for(int i = 0; i < slidingBlockPuzzle.length; i++){
+            for(int j = 0; j < slidingBlockPuzzle[0].length; j++){
+                System.out.print(slidingBlockPuzzle[i][j] + " ");
+            }
+            System.out.println();
+        }
     }
 
     public static void main(String[] args) {
-        
+        /*
+        The below code is a small unit test for the CreateArray and
+        PrintArray functions
+        */
+        int [][] slidingBlockPuzzle = CreateArray(3, 3);
+        PrintArray(slidingBlockPuzzle);
     }
 
 }
