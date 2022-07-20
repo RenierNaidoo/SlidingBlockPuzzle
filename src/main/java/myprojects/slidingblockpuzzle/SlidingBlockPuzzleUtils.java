@@ -11,8 +11,8 @@ package myprojects.slidingblockpuzzle;
 public class SlidingBlockPuzzleUtils {
 
     /*
-    This Function creates and returned a randomized 2D array that contains the tiles ranging 
-    from 1 to 15, with a 0 representing the impty block.
+    This Function creates and returns a randomized 2D array that contains the tiles ranging 
+    from 1 to 15, with a 0 representing the empty block.
      */
     public static int[][] CreateArray(int rows, int cols) {
         int[][] slidingBlockPuzzle = new int[rows][cols];
@@ -39,7 +39,7 @@ public class SlidingBlockPuzzleUtils {
         }
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                if(slidingBlockPuzzle[i][j]==16){
+                if(slidingBlockPuzzle[i][j]==rows*cols){
                     slidingBlockPuzzle[i][j] = 0;
                 }
             }
@@ -69,10 +69,39 @@ public class SlidingBlockPuzzleUtils {
     }
 
     /*
+    This function is called to test if the sliding block puzzle is solved
+    */
+    
+    public static boolean DetermineIfSolved(int[][] slidingBlockPuzzle)
+    {
+        boolean isSolved = true;
+        int rows = slidingBlockPuzzle.length;
+        int cols = slidingBlockPuzzle[0].length;
+        int counter = 1;
+        for(int i = 0; i < rows; i++)
+        {
+            for(int j = 0; j < cols; j++)
+            {
+                if(slidingBlockPuzzle[i][j] != counter)
+                {
+                    isSolved = false;
+                    counter++;
+                }
+            }
+        }
+        System.out.println("System Solved: " + isSolved);
+        return isSolved;
+    }
+    
+    /*
     This function accepts the initial 2D array and solves it on a step-by-step basis.
      */
     public static void SolvePuzzle(int[][] slidingBlockPuzzle) {
-
+        //Make a move i.e., swap a tile into the empty spot
+        
+        //Check if puzzle is solved
+        
+        //Continue solving if still solved.
     }
 
     /*
@@ -94,6 +123,7 @@ public class SlidingBlockPuzzleUtils {
         */
         int [][] slidingBlockPuzzle = CreateArray(3, 3);
         PrintArray(slidingBlockPuzzle);
+        DetermineIfSolved(slidingBlockPuzzle);
     }
 
 }
