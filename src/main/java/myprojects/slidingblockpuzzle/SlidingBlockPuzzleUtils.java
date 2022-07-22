@@ -39,7 +39,6 @@ public class SlidingBlockPuzzleUtils {
         //int performanceCounter = 0; //Counts how many random numbers are checked during array creation.
         boolean isNewInt = false;
         int toAdd = 0;
-        int toCheck;
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 while (!isNewInt) {
@@ -136,7 +135,7 @@ public class SlidingBlockPuzzleUtils {
             int[] coordinates = FindEmptyTile(board);
             int x = coordinates[0];
             int y = coordinates[1];
-            int[][] temp = new int[rows][cols];
+            int[][] temp;
             temp = DeepCopy(board);
             if (x > 0) {
                 temp[x][y] = temp[x - 1][y];
@@ -180,7 +179,6 @@ public class SlidingBlockPuzzleUtils {
                     root.AddTree(branch);
                     SolvePuzzle(branch, counter);
                 }
-                temp = DeepCopy(board);
             }
         } else if (isSolved) {
             solved = true;
