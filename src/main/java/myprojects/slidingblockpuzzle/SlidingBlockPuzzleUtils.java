@@ -160,14 +160,17 @@ public class SlidingBlockPuzzleUtils {
             int y = coordinates[1];
             int[][] temp;
             temp = DeepCopy(board);
+            int[] evals = new int[4]; //Stored as left, right, up, down
+            for(int i = 0; i < 4; i++)
+            {
+                evals[i] = Integer.MAX_VALUE;
+            }
             if (x > 0) {
                 temp[x][y] = temp[x - 1][y];
                 temp[x - 1][y] = 0;
                 boardString = ToString(temp);
                 if (!checked.contains(boardString)) {
-                    GameTree branch = new GameTree(temp, counter);
-                    root.AddTree(branch);
-                    SolvePuzzle(branch, counter);
+                    evals[0] = CalcManhattan(temp);
                 }
                 temp = DeepCopy(board);
             }
@@ -176,9 +179,7 @@ public class SlidingBlockPuzzleUtils {
                 temp[x + 1][y] = 0;
                 boardString = ToString(temp);
                 if (!checked.contains(boardString)) {
-                    GameTree branch = new GameTree(temp, counter);
-                    root.AddTree(branch);
-                    SolvePuzzle(branch, counter);
+                    evals[1] = CalcManhattan(temp);
                 }
                 temp = DeepCopy(board);
             }
@@ -187,9 +188,7 @@ public class SlidingBlockPuzzleUtils {
                 temp[x][y - 1] = 0;
                 boardString = ToString(temp);
                 if (!checked.contains(boardString)) {
-                    GameTree branch = new GameTree(temp, counter);
-                    root.AddTree(branch);
-                    SolvePuzzle(branch, counter);
+                    evals[2] = CalcManhattan(temp);
                 }
                 temp = DeepCopy(board);
             }
@@ -198,10 +197,60 @@ public class SlidingBlockPuzzleUtils {
                 temp[x][y + 1] = 0;
                 boardString = ToString(temp);
                 if (!checked.contains(boardString)) {
-                    GameTree branch = new GameTree(temp, counter);
+                    evals[3] = CalcManhattan(temp);
+                }
+            }
+            /*
+            GameTree branch = new GameTree(temp, counter);
                     root.AddTree(branch);
                     SolvePuzzle(branch, counter);
+            */
+            int smallest = Integer.MAX_VALUE;
+            int smallestIndex = 0;
+            for(int i = 0; i < 4; i++)
+            {
+                if(smallest > evals[i])
+                {
+                    smallest = evals[i];
+                    smallestIndex = i;
                 }
+            }
+            GameTree branch;
+            temp = DeepCopy(board);
+            if(smallest != Integer.MAX_VALUE)
+            {
+                switch (smallestIndex) {
+                case 0:
+                    temp[x][y] = temp[x - 1][y];
+                    temp[x - 1][y] = 0;
+                    branch = new GameTree(temp, counter);
+                    root.AddTree(branch);
+                    SolvePuzzle(branch, counter);
+                    break;
+                case 1:
+                    temp[x][y] = temp[x + 1][y];
+                    temp[x + 1][y] = 0;
+                    branch = new GameTree(temp, counter);
+                    root.AddTree(branch);
+                    SolvePuzzle(branch, counter);
+                    break;
+                case 2:
+                    temp[x][y] = temp[x][y - 1];
+                    temp[x][y - 1] = 0;
+                    branch = new GameTree(temp, counter);
+                    root.AddTree(branch);
+                    SolvePuzzle(branch, counter);
+                    break;
+                case 3:
+                    temp[x][y] = temp[x][y + 1];
+                    temp[x][y + 1] = 0;
+                    branch = new GameTree(temp, counter);
+                    root.AddTree(branch);
+                    SolvePuzzle(branch, counter);
+                    break;
+                default:
+                    throw new AssertionError();
+            }
             }
         } else if (isSolved) {
             solved = true;
@@ -309,7 +358,7 @@ public class SlidingBlockPuzzleUtils {
         for (int i = 0; i < 100; i++) {
             solved = false;
             moveCounter = 0;
-            int[][] slidingBlockPuzzle = CreateArray(2, 2);
+            int[][] slidingBlockPuzzle = CreateArray(3, 3);
             if (IsSolvable(slidingBlockPuzzle)) {
                 GameTree root = new GameTree(slidingBlockPuzzle, 0);
                 SolvePuzzle(root, moveCounter);
@@ -332,11 +381,6 @@ public class SlidingBlockPuzzleUtils {
         double averageMoves = totalMoves / totalPuzzles;
         System.out.println("The algorithm had a success rate of " + successRate + "%");
         System.out.println("The algorithm used an average of " + averageMoves + " moves per puzzle");
-        
-        //Unit test for Manhattan distance
-        int[][] slidingBlockPuzzle = CreateArray(2, 2);
-        PrintArray(slidingBlockPuzzle);
-        System.out.println("The Manhattan distance is " + CalcManhattan(slidingBlockPuzzle));
     }
 
 }
