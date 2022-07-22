@@ -15,10 +15,15 @@ import java.util.List;
  */
 public class SlidingBlockPuzzleUtils {
 
-    static int MAX_ATTEMPTS = 50;
+    static int MAX_ATTEMPTS = 100;
     static boolean solved = false;
     static HashSet<String> checked;
+    //performance values
     static int moveCounter;
+    static double totalPuzzles;
+    static double unsolvables;
+    static double solves;
+    static int totalMoves;
 
     /*
     This Function creates and returns a randomized 2D array that contains the tiles ranging 
@@ -100,6 +105,19 @@ public class SlidingBlockPuzzleUtils {
     }
 
     /*
+    Creates a deep copy of an array passed to it
+     */
+    public static int[][] DeepCopy(int[][] board) {
+        int rows = board.length;
+        int cols = board[0].length;
+        int[][] temp = new int[rows][cols];
+        for (int i = 0; i < cols; i++) {
+            temp[i] = Arrays.copyOf(board[i], rows);
+        }
+        return temp;
+    }
+
+    /*
     This function accepts the initial 2D array and solves it on a step-by-step basis.
     Returns a root node containing the series of steps used to solve the puzzle.
      */
@@ -107,7 +125,6 @@ public class SlidingBlockPuzzleUtils {
         int[][] board = root.gameBoard;
         String boardString = ToString(board);
         checked.add(boardString);
-        System.out.println(boardString);
         moveCounter++;
         int rows = board.length;
         int cols = board[0].length;
@@ -120,10 +137,7 @@ public class SlidingBlockPuzzleUtils {
             int x = coordinates[0];
             int y = coordinates[1];
             int[][] temp = new int[rows][cols];
-            //Creates a deep copy of the boards 2D array
-            for (int i = 0; i < cols; i++) {
-                temp[i] = Arrays.copyOf(board[i], rows);
-            }
+            temp = DeepCopy(board);
             if (x > 0) {
                 temp[x][y] = temp[x - 1][y];
                 temp[x - 1][y] = 0;
@@ -133,9 +147,7 @@ public class SlidingBlockPuzzleUtils {
                     root.AddTree(branch);
                     SolvePuzzle(branch, counter);
                 }
-                for (int i = 0; i < cols; i++) {
-                    temp[i] = Arrays.copyOf(board[i], rows);
-                }
+                temp = DeepCopy(board);
             }
             if (x < (rows - 1)) {
                 temp[x][y] = temp[x + 1][y];
@@ -146,9 +158,7 @@ public class SlidingBlockPuzzleUtils {
                     root.AddTree(branch);
                     SolvePuzzle(branch, counter);
                 }
-                for (int i = 0; i < cols; i++) {
-                    temp[i] = Arrays.copyOf(board[i], rows);
-                }
+                temp = DeepCopy(board);
             }
             if (y > 0) {
                 temp[x][y] = temp[x][y - 1];
@@ -159,9 +169,7 @@ public class SlidingBlockPuzzleUtils {
                     root.AddTree(branch);
                     SolvePuzzle(branch, counter);
                 }
-                for (int i = 0; i < cols; i++) {
-                    temp[i] = Arrays.copyOf(board[i], rows);
-                }
+                temp = DeepCopy(board);
             }
             if (y < cols - 1) {
                 temp[x][y] = temp[x][y + 1];
@@ -172,9 +180,7 @@ public class SlidingBlockPuzzleUtils {
                     root.AddTree(branch);
                     SolvePuzzle(branch, counter);
                 }
-                for (int i = 0; i < cols; i++) {
-                    temp[i] = Arrays.copyOf(board[i], rows);
-                }
+                temp = DeepCopy(board);
             }
         } else if (isSolved) {
             solved = true;
@@ -233,19 +239,83 @@ public class SlidingBlockPuzzleUtils {
         }
     }
 
+    /*
+    This function determines if a particular configuration is solvable, returns true
+    or false as relevant.
+    */
+    public static boolean IsSolvable(int[][] board) {
+        boolean isSolveable = false;
+        //count inversions
+        String boardString = ToString(board);
+        int inversion = 0;
+        for (int i = 0; i < boardString.length(); i++) {
+            int first = Integer.parseInt(boardString.substring(i, i + 1));
+            for (int j = i; j < boardString.length(); j++) {
+                int second = Integer.parseInt(boardString.substring(j, j + 1));
+                if (first > second && first != 0 && second != 0) {
+                    inversion++;
+                }
+            }
+        }
+        //determine empty tile
+        int[] coordinates = FindEmptyTile(board);
+        if (board.length % 2 != 0) //N is odd
+        {
+            if (inversion % 2 == 0) {
+                isSolveable = true;
+            }
+        } else {
+            if (coordinates[0]%2 != 0 && inversion%2 == 0) {
+                isSolveable = true;
+            } else if(coordinates[0]%2 == 0 && inversion%2 != 0) {
+                isSolveable = true;
+            }
+        }
+        return isSolveable;
+    }
+
     public static void main(String[] args) {
         /*
-        The below code is a small unit test for the CreateArray and
-        PrintArray functions
+        The below code runs a small simulation of the algorithm to determine
+        its success rate and performance. All functions are tested by this code.
+        There is no error checking for incorrect input.
          */
-        int[][] slidingBlockPuzzle = CreateArray(2, 2);
-        PrintArray(slidingBlockPuzzle);
-        DetermineIfSolved(slidingBlockPuzzle);
-        GameTree puzzle = new GameTree(slidingBlockPuzzle, 0);
-        checked = new HashSet();
-        moveCounter = 0;
-        SolvePuzzle(puzzle, 0);
-        System.out.println(moveCounter);
+        totalPuzzles = 0;
+        unsolvables = 0;
+        solves = 0;
+        totalMoves = 0;
+        checked = new HashSet<>();
+        for(int i = 0; i < 100; i++)
+        {
+           solved = false;
+           moveCounter = 0;
+           int[][] slidingBlockPuzzle = CreateArray(3, 3);
+           if(IsSolvable(slidingBlockPuzzle))
+           {
+               GameTree root = new GameTree(slidingBlockPuzzle, 0);
+               SolvePuzzle(root, moveCounter);
+               if(solved)
+               {
+                   solves++;
+               }
+           }
+           else
+           {
+               unsolvables++;
+           }
+           totalPuzzles++;
+           checked.clear();
+           totalMoves += moveCounter;
+        }
+        System.out.println("A total of " + totalPuzzles + " puzzles were attempted");
+        System.out.println("A total of " + unsolvables + " puzzles were in unsolvable configs");
+        System.out.println("A total of " + solves + " puzzles were solved");
+        double remainder = totalPuzzles - unsolvables - solves;
+        System.out.println("A total of " + remainder + " puzzles were attempted without a solution found");
+        double successRate = ((solves/(totalPuzzles - unsolvables))*100);
+        double averageMoves = totalMoves/totalPuzzles;
+        System.out.println("The algorithm had a success rate of " + successRate + "%");
+        System.out.println("The algorithm used an average of "+ averageMoves + " moves per puzzle");
     }
 
 }
