@@ -81,6 +81,29 @@ public class SlidingBlockPuzzleUtils {
     }
 
     /*
+    This function calculates the manhattan distance when the given board is 
+    compared to the goal state
+     */
+    public static int CalcManhattan(int[][] board) {
+        int rows = board.length;
+        int cols = board[0].length;
+        int manhattan = 0;
+        int counter = 1;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if(counter < (rows*cols))
+                {
+                    int[] coordinates = FindTile(board, counter);
+                    manhattan += Math.abs((coordinates[0] - i));
+                    manhattan += Math.abs((coordinates[1] - j));
+                    counter++;
+                }
+            }
+        }
+        return manhattan;
+    }
+
+    /*
     This function is called to test if the sliding block puzzle is solved
      */
     public static boolean DetermineIfSolved(int[][] slidingBlockPuzzle) {
@@ -132,7 +155,7 @@ public class SlidingBlockPuzzleUtils {
         //Make a move i.e., swap a tile into the empty spot
         if (!isSolved && counter <= MAX_ATTEMPTS && !solved) {
             counter++;
-            int[] coordinates = FindEmptyTile(board);
+            int[] coordinates = FindTile(board, 0);
             int x = coordinates[0];
             int y = coordinates[1];
             int[][] temp;
@@ -197,13 +220,13 @@ public class SlidingBlockPuzzleUtils {
     }
 
     /*
-    This function determines the coordinates of the 0/empty tile
+    This function determines the coordinates of the requested tile
      */
-    public static int[] FindEmptyTile(int[][] board) {
+    public static int[] FindTile(int[][] board, int tile) {
         int[] coordinates = new int[2];
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[0].length; j++) {
-                if (board[i][j] == 0) {
+                if (board[i][j] == tile) {
                     coordinates[0] = i;
                     coordinates[1] = j;
                 }
@@ -240,7 +263,7 @@ public class SlidingBlockPuzzleUtils {
     /*
     This function determines if a particular configuration is solvable, returns true
     or false as relevant.
-    */
+     */
     public static boolean IsSolvable(int[][] board) {
         boolean isSolveable = false;
         //count inversions
@@ -256,16 +279,16 @@ public class SlidingBlockPuzzleUtils {
             }
         }
         //determine empty tile
-        int[] coordinates = FindEmptyTile(board);
+        int[] coordinates = FindTile(board, 0);
         if (board.length % 2 != 0) //N is odd
         {
             if (inversion % 2 == 0) {
                 isSolveable = true;
             }
         } else {
-            if (coordinates[0]%2 != 0 && inversion%2 == 0) {
+            if (coordinates[0] % 2 != 0 && inversion % 2 == 0) {
                 isSolveable = true;
-            } else if(coordinates[0]%2 == 0 && inversion%2 != 0) {
+            } else if (coordinates[0] % 2 == 0 && inversion % 2 != 0) {
                 isSolveable = true;
             }
         }
@@ -283,37 +306,37 @@ public class SlidingBlockPuzzleUtils {
         solves = 0;
         totalMoves = 0;
         checked = new HashSet<>();
-        for(int i = 0; i < 100; i++)
-        {
-           solved = false;
-           moveCounter = 0;
-           int[][] slidingBlockPuzzle = CreateArray(3, 3);
-           if(IsSolvable(slidingBlockPuzzle))
-           {
-               GameTree root = new GameTree(slidingBlockPuzzle, 0);
-               SolvePuzzle(root, moveCounter);
-               if(solved)
-               {
-                   solves++;
-               }
-           }
-           else
-           {
-               unsolvables++;
-           }
-           totalPuzzles++;
-           checked.clear();
-           totalMoves += moveCounter;
+        for (int i = 0; i < 100; i++) {
+            solved = false;
+            moveCounter = 0;
+            int[][] slidingBlockPuzzle = CreateArray(2, 2);
+            if (IsSolvable(slidingBlockPuzzle)) {
+                GameTree root = new GameTree(slidingBlockPuzzle, 0);
+                SolvePuzzle(root, moveCounter);
+                if (solved) {
+                    solves++;
+                }
+            } else {
+                unsolvables++;
+            }
+            totalPuzzles++;
+            checked.clear();
+            totalMoves += moveCounter;
         }
         System.out.println("A total of " + totalPuzzles + " puzzles were attempted");
         System.out.println("A total of " + unsolvables + " puzzles were in unsolvable configs");
         System.out.println("A total of " + solves + " puzzles were solved");
         double remainder = totalPuzzles - unsolvables - solves;
         System.out.println("A total of " + remainder + " puzzles were attempted without a solution found");
-        double successRate = ((solves/(totalPuzzles - unsolvables))*100);
-        double averageMoves = totalMoves/totalPuzzles;
+        double successRate = ((solves / (totalPuzzles - unsolvables)) * 100);
+        double averageMoves = totalMoves / totalPuzzles;
         System.out.println("The algorithm had a success rate of " + successRate + "%");
-        System.out.println("The algorithm used an average of "+ averageMoves + " moves per puzzle");
+        System.out.println("The algorithm used an average of " + averageMoves + " moves per puzzle");
+        
+        //Unit test for Manhattan distance
+        int[][] slidingBlockPuzzle = CreateArray(2, 2);
+        PrintArray(slidingBlockPuzzle);
+        System.out.println("The Manhattan distance is " + CalcManhattan(slidingBlockPuzzle));
     }
 
 }
