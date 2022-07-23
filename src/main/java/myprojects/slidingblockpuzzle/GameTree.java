@@ -5,6 +5,7 @@
 package myprojects.slidingblockpuzzle;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -19,12 +20,12 @@ public class GameTree {
     public int[][] gameBoard;
     public GameTree previousNode;
     public List<GameTree> nextNodes;
-    public int move;
+    public int manhattanDist;
     
-    public GameTree(int[][] board, int m)
+    public GameTree(int[][] board, int dist)
     {
         gameBoard = board;
-        move = m;
+        manhattanDist = dist;
         nextNodes = new ArrayList();
     }
     

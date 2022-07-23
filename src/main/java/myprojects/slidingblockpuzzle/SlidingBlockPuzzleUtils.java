@@ -6,8 +6,10 @@ package myprojects.slidingblockpuzzle;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.PriorityQueue;
 
 /**
  *
@@ -15,9 +17,10 @@ import java.util.List;
  */
 public class SlidingBlockPuzzleUtils {
 
-    static int MAX_ATTEMPTS = 100;
-    static boolean solved = false;
-    static HashSet<String> checked;
+    static int MAX_ATTEMPTS = 3000; //Upper limit of moves to attempt. Any higher might result in stackoverflow
+    static boolean solved = false; //Flag to stop attempting moves after solve
+    static HashSet<String> checked; //Hashset to avoid repeating moves
+    static PriorityQueue<GameTree> pq; //Priority Queue for storing moves that can be made
     //performance values
     static int moveCounter;
     static double totalPuzzles;
@@ -152,7 +155,7 @@ public class SlidingBlockPuzzleUtils {
         int cols = board[0].length;
         //Check if puzzle is solved
         boolean isSolved = DetermineIfSolved(board);
-        //Make a move i.e., swap a tile into the empty spot
+        //Make a move i.e., swap a tile into the empty spot if a puzzle is unsolved
         if (!isSolved && counter <= MAX_ATTEMPTS && !solved) {
             counter++;
             int[] coordinates = FindTile(board, 0);
@@ -160,98 +163,57 @@ public class SlidingBlockPuzzleUtils {
             int y = coordinates[1];
             int[][] temp;
             temp = DeepCopy(board);
-            int[] evals = new int[4]; //Stored as left, right, up, down
-            for(int i = 0; i < 4; i++)
-            {
-                evals[i] = Integer.MAX_VALUE;
-            }
+            //Adds viable moves to priority queue, which is ordered based on manhattan distance
             if (x > 0) {
                 temp[x][y] = temp[x - 1][y];
                 temp[x - 1][y] = 0;
+                GameTree branch = new GameTree(temp, CalcManhattan(temp));
+                root.AddTree(branch);
                 boardString = ToString(temp);
                 if (!checked.contains(boardString)) {
-                    evals[0] = CalcManhattan(temp);
+                    pq.add(branch);
                 }
                 temp = DeepCopy(board);
             }
             if (x < (rows - 1)) {
                 temp[x][y] = temp[x + 1][y];
                 temp[x + 1][y] = 0;
+                GameTree branch = new GameTree(temp, CalcManhattan(temp));
+                root.AddTree(branch);
                 boardString = ToString(temp);
                 if (!checked.contains(boardString)) {
-                    evals[1] = CalcManhattan(temp);
+                    pq.add(branch);
                 }
                 temp = DeepCopy(board);
             }
             if (y > 0) {
                 temp[x][y] = temp[x][y - 1];
                 temp[x][y - 1] = 0;
+                GameTree branch = new GameTree(temp, CalcManhattan(temp));
+                root.AddTree(branch);
                 boardString = ToString(temp);
                 if (!checked.contains(boardString)) {
-                    evals[2] = CalcManhattan(temp);
+                    pq.add(branch);
                 }
                 temp = DeepCopy(board);
             }
             if (y < cols - 1) {
                 temp[x][y] = temp[x][y + 1];
                 temp[x][y + 1] = 0;
+                GameTree branch = new GameTree(temp, CalcManhattan(temp));
+                root.AddTree(branch);
                 boardString = ToString(temp);
                 if (!checked.contains(boardString)) {
-                    evals[3] = CalcManhattan(temp);
+                    pq.add(branch);
                 }
             }
-            /*
-            GameTree branch = new GameTree(temp, counter);
-                    root.AddTree(branch);
-                    SolvePuzzle(branch, counter);
-            */
-            int smallest = Integer.MAX_VALUE;
-            int smallestIndex = 0;
-            for(int i = 0; i < 4; i++)
+            pq.remove(root);
+            GameTree next = pq.peek();
+            if(next != null)
             {
-                if(smallest > evals[i])
-                {
-                    smallest = evals[i];
-                    smallestIndex = i;
-                }
+                SolvePuzzle(next, counter);
             }
-            GameTree branch;
-            temp = DeepCopy(board);
-            if(smallest != Integer.MAX_VALUE)
-            {
-                switch (smallestIndex) {
-                case 0:
-                    temp[x][y] = temp[x - 1][y];
-                    temp[x - 1][y] = 0;
-                    branch = new GameTree(temp, counter);
-                    root.AddTree(branch);
-                    SolvePuzzle(branch, counter);
-                    break;
-                case 1:
-                    temp[x][y] = temp[x + 1][y];
-                    temp[x + 1][y] = 0;
-                    branch = new GameTree(temp, counter);
-                    root.AddTree(branch);
-                    SolvePuzzle(branch, counter);
-                    break;
-                case 2:
-                    temp[x][y] = temp[x][y - 1];
-                    temp[x][y - 1] = 0;
-                    branch = new GameTree(temp, counter);
-                    root.AddTree(branch);
-                    SolvePuzzle(branch, counter);
-                    break;
-                case 3:
-                    temp[x][y] = temp[x][y + 1];
-                    temp[x][y + 1] = 0;
-                    branch = new GameTree(temp, counter);
-                    root.AddTree(branch);
-                    SolvePuzzle(branch, counter);
-                    break;
-                default:
-                    throw new AssertionError();
-            }
-            }
+            //Runs if puzzle is solved
         } else if (isSolved) {
             solved = true;
             List<int[][]> output = new ArrayList();
@@ -264,6 +226,10 @@ public class SlidingBlockPuzzleUtils {
                 PrintArray(output.get(i));
                 System.out.println("");
             }
+        }
+        //Error output if puzzle unsolved after max moves
+        else if(counter > MAX_ATTEMPTS){
+            System.out.println("Maximum steps exceeded: solution failed");
         }
         return root;
     }
@@ -355,12 +321,14 @@ public class SlidingBlockPuzzleUtils {
         solves = 0;
         totalMoves = 0;
         checked = new HashSet<>();
+        pq = new PriorityQueue<>(100, new NodeComparator());
         for (int i = 0; i < 100; i++) {
             solved = false;
             moveCounter = 0;
             int[][] slidingBlockPuzzle = CreateArray(3, 3);
             if (IsSolvable(slidingBlockPuzzle)) {
                 GameTree root = new GameTree(slidingBlockPuzzle, 0);
+                pq.add(root);
                 SolvePuzzle(root, moveCounter);
                 if (solved) {
                     solves++;
@@ -370,6 +338,7 @@ public class SlidingBlockPuzzleUtils {
             }
             totalPuzzles++;
             checked.clear();
+            pq.clear();
             totalMoves += moveCounter;
         }
         System.out.println("A total of " + totalPuzzles + " puzzles were attempted");
@@ -377,10 +346,10 @@ public class SlidingBlockPuzzleUtils {
         System.out.println("A total of " + solves + " puzzles were solved");
         double remainder = totalPuzzles - unsolvables - solves;
         System.out.println("A total of " + remainder + " puzzles were attempted without a solution found");
-        double successRate = ((solves / (totalPuzzles - unsolvables)) * 100);
+        double successRate = (Math.round((solves / (totalPuzzles - unsolvables)) * 100));
         double averageMoves = totalMoves / totalPuzzles;
-        System.out.println("The algorithm had a success rate of " + successRate + "%");
-        System.out.println("The algorithm used an average of " + averageMoves + " moves per puzzle");
+        System.out.println("The algorithm had a success rate of " + Math.round(successRate) + "%");
+        System.out.println("The algorithm used an average of " + Math.round(averageMoves) + " moves per puzzle");
     }
 
 }
